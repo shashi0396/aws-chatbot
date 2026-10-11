@@ -1,21 +1,43 @@
 import streamlit as st
 from backend import get_response
+from config import APP_TITLE, APP_ICON , APP_MODE
 
 st.set_page_config(
-    page_title="Cloud Assistant",
-    page_icon=":guardsman:",
+    page_title=APP_TITLE,
+    page_icon=APP_ICON,
+    layout="centered",
 )
 
 st.title("Cloud Assistant")
+st.caption("Your personal cloud and DevOps assistant")
 
-# st.write("Our first step toward an Amazon Bedrock application")
-st.caption("Learning to build an AI application step by step")
+# name = st.text_input("What is your name?")
+
+# if st.button("Submit"):
+#     if name:
+#         st.success(f"Welcome, {name}!")
+#     else:
+#         st.warning("Please enter your name.")
 
 # Initilaize the chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display existing messages
+# sidebar controls
+with st.sidebar:
+    st.header("Settings")
+    st.info(f"Application Mode: {APP_MODE}")
+    st.write("Mode: Local Development")
+
+    if st.button("Clear Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.rerun()
+    
+    st.divider()
+    st.caption("Built with Python and Streamlit")
+    st.caption("Powered by Amazon Bedrock")
+
+# Render conversation history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -32,29 +54,23 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
     
-    # temporary reponse - no AI model yet
-    response = (
-        f"You asked: {prompt}\n\n"
-        "this is a placeholder response from the Cloud Assistant."
-        " we will connect to Amazon Bedrock later!"
-    )
-
-    response = get_response(prompt)
-
-    st.session_state.messages.append(
-        {"role": "assistant",
-        "content": response}
-    )
-
+    # Process response with a loading indicator
     with st.chat_message("assistant"):
+        with st.spinner("Thinking ..."):
+            try:
+                response = get_response(
+                    prompt,
+                    history=st.session_state.messages[:-1],
+                )
+            except Exception:
+                st.error(
+                    "Unable to process your request. "
+                    "Please try again."
+                )
+                st.stop()
         st.markdown(response)
 
-
-
-# name = st.text_input("What is your name?")
-
-# if st.button("Submit"):
-#     if name:
-#         st.success(f"Welcome, {name}!")
-#     else:
-#         st.warning("Please enter your name.")
+    # Save assistant response
+    st.session_state.messages.append(
+        {"role": "assistant","content": response}
+    )

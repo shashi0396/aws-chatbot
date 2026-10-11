@@ -1,15 +1,27 @@
-def get_response(prompt: str) -> str:
-    """
-    Process a user prompt and return a response.
-    For now, this is a placeholder.
-    Later, we will call Amazon Bedrock here.
-    """
+import os
+from config import APP_MODE
 
-    if not prompt.strip():
+def get_response(prompt: str , history: list | None = None) -> str:
+    """Return a response to the user's prompt."""
+
+    if not prompt or not prompt.strip():
         return "Please enter a question."
     
-    return (
-        f"You asked: {prompt}\n\n"
-        "This response comes from our Python backend. "
-        "Later, Amazon Bedrock will generate the answer."
+    if history is None:
+        history = []
+    
+    mode = os.getenv("APP_MODE", "mock")
+
+    if APP_MODE == "mock":
+        previous_messages = len(history)
+
+        return (
+            f"You asked: {prompt}\n\n"
+            f"Previous messages available: {previous_messages}\n\n"
+            "This is a local development response. "
+            "Bedrock integration will come later."
+        )
+    
+    raise RuntimeError(
+        f"Unsupported application mode: {APP_MODE}."
     )
